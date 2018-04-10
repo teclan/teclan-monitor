@@ -22,6 +22,13 @@ public class Main {
 				LOGGER.info("{}", info);
 			}
 
+			LOGGER.info("\n\n=============================\n\n");
+
+			List<SigarInfoEntity> cpuInfos = SigarUtils.getCpuInfos();
+			for (SigarInfoEntity info : cpuInfos) {
+				LOGGER.info("{}", info);
+			}
+
 		} catch (SigarException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
