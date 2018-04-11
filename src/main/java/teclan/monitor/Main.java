@@ -30,8 +30,7 @@ public class Main {
 			}
 
 		} catch (SigarException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(), e);
 		}
 
 	}
