@@ -24,6 +24,8 @@ public class DefaultHandler implements Handler {
 	private static final String INSERT_MEMORY_STATUS_SQL = " INSERT INTO memory_status (total_memory,use_memory,use_percent,free_memory,free_percent,total_swap,use_swap,use_swap_percent,freel_swap,freel_swap_percent)\r\n"
 			+ " VALUES (?,?,?,?,?,?,?,?,?,?)";
 
+	private static final String INSEET_CPU_STATUS_SQL = "insert into cpu_status (cpu,percent) values (?,?)";
+
 	@Override
 	public void handle(JSONObject jsonObject) {
 
@@ -96,7 +98,7 @@ public class DefaultHandler implements Handler {
 
 			// 总的CPU使用率
 			JSONObject os = nodeData.getJSONObject("os");
-			long cpu_percent = os.getLongValue("cpu_percent");
+			long cpuPercent = os.getLongValue("cpu_percent");
 
 
 			// 机器内存使用情况
@@ -165,6 +167,7 @@ public class DefaultHandler implements Handler {
 			MysqlDatabase.getDb().exec(INSERT_MEMORY_STATUS_SQL, totalMem, usedMem, usedMemPercent, freeMem,
 					freeMemPercent, totalSwap, useSwap, usedSwapPercent, freeSwap, freeSwapPercent);
 
+			MysqlDatabase.getDb().exec(INSEET_CPU_STATUS_SQL, "所有", cpuPercent);
 
 			MysqlDatabase.closeDatabase();
 
