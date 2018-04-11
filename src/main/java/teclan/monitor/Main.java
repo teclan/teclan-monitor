@@ -1,37 +1,39 @@
 package teclan.monitor;
 
-import java.util.List;
-
-import org.hyperic.sigar.SigarException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import teclan.monitor.sigar.SigarInfoEntity;
-import teclan.monitor.sigar.SigarUtils;
+import teclan.monitor.mysql.MysqlDatabase;
 
 public class Main {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
 	public static void main(String[] args) {
 
-		// 内存使用率
+		MysqlDatabase.openDatabase();
 
-		try {
-			List<SigarInfoEntity> memoryInfos = SigarUtils.getMemoryInfos();
-			for (SigarInfoEntity info : memoryInfos) {
-				LOGGER.info("{}", info);
-			}
+		MysqlDatabase.closeDatabase();
 
-			LOGGER.info("\n\n=============================\n\n");
+//		// 内存使用率
+//
+//		try {
+//			List<SigarInfoEntity> memoryInfos = SigarUtils.getMemoryInfos();
+//			for (SigarInfoEntity info : memoryInfos) {
+//				LOGGER.info("{}", info);
+//			}
+//
+//			LOGGER.info("\n\n=============================\n\n");
+//
+//			List<SigarInfoEntity> cpuInfos = SigarUtils.getCpuInfos();
+//			for (SigarInfoEntity info : cpuInfos) {
+//				LOGGER.info("{}", info);
+//			}
+//
+//		} catch (SigarException e) {
+//			LOGGER.error(e.getMessage(), e);
+//		}
+		
 
-			List<SigarInfoEntity> cpuInfos = SigarUtils.getCpuInfos();
-			for (SigarInfoEntity info : cpuInfos) {
-				LOGGER.info("{}", info);
-			}
-
-		} catch (SigarException e) {
-			LOGGER.error(e.getMessage(), e);
-		}
 
 	}
 

@@ -18,6 +18,7 @@ import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import teclan.monitor.handle.Handler;
 import teclan.monitor.model.MQModel;
 import teclan.monitor.model.QueueModel;
 import teclan.monitor.model.TopicModel;
@@ -41,6 +42,8 @@ public class MqMonitor {
 	private static final Logger LOGGER = LoggerFactory.getLogger(MqMonitor.class);
 
 	/**
+	 * 
+	 * 监控 ActiveMQ
 	 * 
 	 * @param ip
 	 * @param connectorPort
@@ -89,6 +92,62 @@ public class MqMonitor {
 		connector.close();
 
 		return models;
+
+	}
+
+	/**
+	 * 
+	 * 监控 ActiveMQ
+	 * 
+	 * @param ip
+	 * @param connectorPort
+	 * @param connectorPath
+	 * @param jmxDomainName
+	 *            必须与activemq.xml中的jmxDomainName一致
+	 * @param handler
+	 *            对结果的处理
+	 * @throws IOException
+	 * @throws MalformedObjectNameException
+	 */
+	public static void monitor(String ip, int connectorPort, String connectorPath, String jmxDomainName,
+			Handler handler) throws IOException, MalformedObjectNameException {
+
+		List<MQModel> models = new ArrayList<MQModel>();
+
+		JMXServiceURL url = new JMXServiceURL(
+				String.format("service:jmx:rmi:///jndi/rmi://%s:%s%s", ip, connectorPort, connectorPath));
+		JMXConnector connector = JMXConnectorFactory.connect(url, null);
+		connector.connect();
+
+		MBeanServerConnection connection = connector.getMBeanServerConnection();
+
+		ObjectName name = new ObjectName(jmxDomainName + ":BrokerName=localhost,Type=Broker");
+		BrokerViewMBean mBean = (BrokerViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection, name,
+				BrokerViewMBean.class, true);
+
+		for (ObjectName topicName : mBean.getTopics()) {
+			TopicViewMBean topice = (TopicViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection,
+					topicName, TopicViewMBean.class, true);
+
+			TopicModel topicModel = new TopicModel(topice.getName(), topice.getQueueSize(), topice.getConsumerCount(),
+					topice.getDequeueCount());
+
+			models.add(topicModel);
+		}
+
+		for (ObjectName queueName : mBean.getQueues()) {
+			QueueViewMBean queueMBean = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection,
+					queueName, QueueViewMBean.class, true);
+
+			QueueModel queue = new QueueModel(queueMBean.getName(), queueMBean.getQueueSize(),
+					queueMBean.getConsumerCount(), queueMBean.getDequeueCount());
+
+			models.add(queue);
+		}
+
+		connector.close();
+
+		handler.handle(models);
 
 	}
 }
