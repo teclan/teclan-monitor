@@ -32,9 +32,9 @@ GET  _nodes/stats （或者指定node获取 _nodes/node1,node2/stats）
 
 # 内存和CPU
 
- 内存和CPU目前均通过`elasticsearch`的状态查询接口获取。项目中已经集成 `sigar`,但还不够完善，后续需要查询每个进程的资源
+ 内存和CPU目前均通过`elasticsearch`的状态查询接口获取。项目中已经集成 `sigar`,但还不够完善，后续需要查询每个
  
- 消耗情况，则缓存`sigar`。
+ 进程的资源消耗情况，则换成`sigar`。
  
  # 数据库
  
