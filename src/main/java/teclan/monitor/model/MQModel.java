@@ -2,6 +2,9 @@ package teclan.monitor.model;
 
 public abstract class MQModel {
 
+	// IP
+	private String ip;
+
 	// 队列名称或广播名称
 	private String name;
 	// 队列或广播的剩余数据量
@@ -17,7 +20,8 @@ public abstract class MQModel {
 		this.type = type;
 	}
 
-	public MQModel(String type, String name, long queueSize, long consumerCount, long dequeueCount) {
+	public MQModel(String ip, String type, String name, long queueSize, long consumerCount, long dequeueCount) {
+		this.ip = ip;
 		this.type = type;
 		this.name = name;
 		this.queueSize = queueSize;
@@ -29,6 +33,14 @@ public abstract class MQModel {
 	public String toString() {
 		return String.format("type:%s,name:%s,size:%s,consumerCount:%s,dequeueCount:%s", type, name, queueSize,
 				consumerCount, dequeueCount);
+	}
+
+	public String getIp() {
+		return ip;
+	}
+
+	public void setIp(String ip) {
+		this.ip = ip;
 	}
 
 	public String getName() {

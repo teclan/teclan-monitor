@@ -1,6 +1,6 @@
-title SiagrFactory
+title teclan.monitor
 
-set MAIN_CLASS=teclan.monitor.sigar.SiagrFactory
+set MAIN_CLASS=teclan.monitor.Main
 
 set CLASSPATH=lib/*
 

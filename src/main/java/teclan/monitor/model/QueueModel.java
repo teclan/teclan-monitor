@@ -6,8 +6,8 @@ public class QueueModel extends MQModel {
 		super("queue");
 	}
 
-	public QueueModel(String name, long queueSize, long consumerCount, long dequeueCount) {
-		super("queue", name, queueSize, consumerCount, dequeueCount);
+	public QueueModel(String ip, String name, long queueSize, long consumerCount, long dequeueCount) {
+		super(ip, "queue", name, queueSize, consumerCount, dequeueCount);
 	}
 
 }

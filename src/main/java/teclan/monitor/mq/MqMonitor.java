@@ -73,7 +73,8 @@ public class MqMonitor {
 			TopicViewMBean topice = (TopicViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection,
 					topicName, TopicViewMBean.class, true);
 
-			TopicModel topicModel = new TopicModel(topice.getName(), topice.getQueueSize(), topice.getConsumerCount(),
+			TopicModel topicModel = new TopicModel(ip, topice.getName(), topice.getQueueSize(),
+					topice.getConsumerCount(),
 					topice.getDequeueCount());
 
 			models.add(topicModel);
@@ -83,7 +84,7 @@ public class MqMonitor {
 			QueueViewMBean queueMBean = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection,
 					queueName, QueueViewMBean.class, true);
 
-			QueueModel queue = new QueueModel(queueMBean.getName(), queueMBean.getQueueSize(),
+			QueueModel queue = new QueueModel(ip, queueMBean.getName(), queueMBean.getQueueSize(),
 					queueMBean.getConsumerCount(), queueMBean.getDequeueCount());
 
 			models.add(queue);
@@ -129,7 +130,8 @@ public class MqMonitor {
 			TopicViewMBean topice = (TopicViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection,
 					topicName, TopicViewMBean.class, true);
 
-			TopicModel topicModel = new TopicModel(topice.getName(), topice.getQueueSize(), topice.getConsumerCount(),
+			TopicModel topicModel = new TopicModel(ip, topice.getName(), topice.getQueueSize(),
+					topice.getConsumerCount(),
 					topice.getDequeueCount());
 
 			models.add(topicModel);
@@ -139,13 +141,15 @@ public class MqMonitor {
 			QueueViewMBean queueMBean = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection,
 					queueName, QueueViewMBean.class, true);
 
-			QueueModel queue = new QueueModel(queueMBean.getName(), queueMBean.getQueueSize(),
+			QueueModel queue = new QueueModel(ip, queueMBean.getName(), queueMBean.getQueueSize(),
 					queueMBean.getConsumerCount(), queueMBean.getDequeueCount());
 
 			models.add(queue);
 		}
 
 		connector.close();
+
+		LOGGER.info("{}", " ====  ActiveMQ");
 
 		handler.handle(models);
 

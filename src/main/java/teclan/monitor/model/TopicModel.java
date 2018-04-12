@@ -6,7 +6,7 @@ public class TopicModel extends MQModel {
 		super("topic");
 	}
 
-	public TopicModel(String name, long queueSize, long consumerCount, long dequeueCount) {
-		super("topic", name, queueSize, consumerCount, dequeueCount);
+	public TopicModel(String ip, String name, long queueSize, long consumerCount, long dequeueCount) {
+		super(ip, "topic", name, queueSize, consumerCount, dequeueCount);
 	}
 }

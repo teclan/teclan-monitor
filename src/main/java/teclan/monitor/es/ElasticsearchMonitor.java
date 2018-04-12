@@ -52,7 +52,7 @@ public class ElasticsearchMonitor {
 
 		JSONObject jsonObject = JSONObject.parseObject(response.body().string());
 
-		LOGGER.info("{}", jsonObject);
+		LOGGER.info("{}", " ====  elasticsearch");
 
 		handler.handle(jsonObject);
 
