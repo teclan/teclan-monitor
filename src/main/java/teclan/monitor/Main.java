@@ -43,6 +43,7 @@ public class Main {
 		Config mq = config.getConfig("mq");
 		// MQ 地址
 		final String mqIp = mq.getString("ip");
+
 		// 以下为 MQ 的其他配置，详见 README.md
 		final int connectorPort = mq.getInt("connectorPort");
 		final String connectorPath = mq.getString("connectorPath");
