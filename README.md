@@ -12,92 +12,105 @@ GET _cluster/stats
 GET  _nodes/stats （或者指定node获取 _nodes/node1,node2/stats）
 ```
 
+详情参见 `elasticsearch性能指标的部分解释.md`
 
-### 查询性能指标，前缀indices.search.*的指标
-```
-    indices.search.query_total 查询总量
-    indices.search.query_time_in_millis 查询总耗时
-    indices.search.query_current 正在处理的查询量
-    indices.search.fetch_total 查询的第二阶段fetch总量
-    indices.search.fetch_time_in_millis fetch耗时
-    indices.search.fetch_current 正在处理的fetch数量
-```
-
-### 索引性能指标，前缀indices.indexing.* ，indices.refresh.* ，indices.flush.* 的指标
-```
-    indices.indexing.index_total 索引总量
-    indices.indexing.index_time_in_millis 索引耗时
-    indices.indexing.index_current 正在处理的索引量
-    indices.refresh.total 刷新内存总量
-    indices.refresh.total_time_in_millis 刷新内存耗时
-    indices.flush.total 同步磁盘总量
-    indices.flush.total_time_in_millis 同步磁盘耗时
-```
-### Cache性能指标，前缀indices.query_cache.* ，indices.fielddata.* ，indices.request_cache.* 的指标。
-
-fielddata可能会成为内存消耗大户，需要特别注意
-```
-    indices.query_cache.memory_size_in_bytes 查询缓存大小
-    indices.query_cache.evictions 查询缓存剔除大小
-    indices.fielddata.memory_size_in_bytes fielddata缓存大小
-    indices.fielddata.evictions fielddata缓存剔除大小
-    indices.request_cache.memory_size_in_bytes 所有请求缓存大小
-    indices.request_cache.evictions 所有请求缓存剔除大小
+# ActiveMQ 状态查询 
+ 
+ 监控 activemq 各个`queue`和`topic`的状态，包括剩余数据量，消费者数量，出队数量，
+ 
+ 需要activemq支持远程监控，配置如下：
+ 
+  修改conf目录下的activemq.xml文件的 managementContext 节点，
+  
+ 配置 `connectorHost`可以不配，配了好像不起作用，后续研究。
+ 
+```  
+<managementContext>  
+			<managementContext createConnector="true" connectorHost="10.0.0.134" connectorPort="1099" 				connectorPath="/jmxrmi" jmxDomainName="org.apache.activemq"/>  
+		</managementContext>  
 ```
 
-### os指标
-```
-    os.cpu.percent 系统CPU使用百分比
-    os.cpu.load_average.1m 系统CPU 1分钟平均load
-    os.cpu.load_average.5m 系统CPU 5分钟平均load
-    os.cpu.load_average.15m 系统CPU 15分钟平均load
-    os.mem.free_percent 系统内存可用百分比
-    os.mem.used_percent 系统内存已使用百分比
-    os.mem.total_in_bytes 系统内存总大小
-    os.mem.free_in_bytes 系统内存可用大小
-    os.mem.used_in_bytes 系统内存已使用大小
-    os.swap.total_in_bytes 系统swap总大小
-    os.swap.free_in_bytes 系统swap可用大小
-    os.swap.used_in_bytes 系统swap已使用大小
-```
+# 内存和CPU
 
-### process指标，专用与es jvm进程的资源消耗指标
-```
-    process.cpu.percent 进程CPU使用百分比
-    process.cpu.total_in_millis 进程CPU使用时间
-    process.mem.total_virtual_in_bytes 进程可用虚拟内存大小
-    process.open_file_descriptors 进程打开文件句柄数
-    process.max_file_descriptors 进程可用句柄数
-```
+ 内存和CPU目前均通过`elasticsearch`的状态查询接口获取。项目中已经集成 `sigar`,但还不够完善，后续需要查询每个进程的资源
+ 
+ 消耗情况，则缓存`sigar`。
+ 
+ # 数据库
+ 
+ 本程序涉及到的数据库相关的脚步如下:
+ 
+ ```
+ CREATE TABLE cpu_status (
+  id 		INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '自增主键',
+  cpu 		VARCHAR(32) COMMENT 'CPU 名称',
+  percent	VARCHARACTER(8) COMMENT '使用占比',  
+  update_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+ )COMMENT 'CPU 信息';
+  
+ CREATE TABLE memory_status (
+  id 			INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '自增主键',  
+  total_memory		VARCHAR(8) COMMENT '物理内存大小',
+  use_memory		VARCHAR(8) COMMENT '已使用物理内存大小',
+  use_percent		VARCHAR(8) COMMENT '已使用物理内存占比',
+  free_memory		VARCHAR(8) COMMENT '剩余物理内存大小',
+  free_percent		VARCHAR(8) COMMENT '剩余物理内存占比',
+  total_swap		VARCHAR(8) COMMENT '交换空间大小',
+  use_swap		VARCHAR(8) COMMENT '已使用交换空间大小',
+  use_swap_percent	VARCHAR(8) COMMENT '已使用交换空间占比',
+  freel_swap		VARCHAR(8) COMMENT '剩余交换空间大小',
+  freel_swap_percent	VARCHAR(8) COMMENT '剩余交换空间占比',  
+  update_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+ )COMMENT '内存信息';
+ 
 
-### JVM性能指标，前缀jvm.*的指标，内存使用及GC指标
-```
-    jvm.gc.collectors.young.collection_count young gc 大小
-    jvm.gc.collectors.young.collection_time_in_millis young gc 耗时
-    jvm.gc.collectors.old.collection_count old gc 大小
-    jvm.gc.collectors.old.collection_time_in_millis old gc 耗时
-    jvm.mem.heap_used_percent 内存使用百分比
-    jvm.mem.heap_used_in_bytes 内存使用量
-    jvm.mem.heap_committed_in_bytes 内存占用量
-```
-
-### 线程池性能指标，前缀thread_pool.*的指标
-```
-    thread_pool.bulk.queue thread_pool.index.queue thread_pool.search.queue thread_pool.merge.queue 各队列长度
-    thread_pool.bulk.rejected thread_pool.index.rejected thread_pool.search.rejected thread_pool.merge.rejected 各队列溢出量（未执行，被放弃）
-```
-
-### 文件系统指标
-```
-    fs.total.total_in_bytes 数据目录总大小
-    fs.total.free_in_bytes 数据目录剩余大小
-    fs.total.vailable_in_bytes 数据目录可用大小
-```
-### 集群通信指标
-```
-    transport.rx_count 集群通信中接收的数据包总数
-    transport.rx_size_in_bytes 集群通信中接收的数据的总大小
-    transport.tx_count 集群通信中发送的数据包总数
-    transport.tx_size_in_bytes 集群通信中发送的数据的总大小
-    transport.server_open 为集群通信打开的连接数
-```
+ CREATE TABLE es_status(
+ id 			INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '自增主键',
+ address		VARCHAR(256) COMMENT '地址',
+ docs_count		INT(11) COMMENT '文档数量',
+ docs_delete		INT(11) COMMENT '删除文档数量',
+ store_size		VARCHAR(256) COMMENT '存储空间大小',
+ store_throttle_time	VARCHAR(256) COMMENT '限流时间',
+ search_query_total     INT(11) COMMENT '查询总量',
+ search_query_time	VARCHAR(256) COMMENT '查询总耗时',
+ search_query_current	INT(11) COMMENT '正在处理的查询量',
+ search_fetch_total	INT(11) COMMENT '查询的第二阶段fetch总量',
+ search_fetch_time	VARCHAR(256) COMMENT 'fetch耗时',
+ search_fetch_current	INT(11) COMMENT '在处理的fetch数量',
+ index_total		INT(11) COMMENT '索引总量',
+ index_time		VARCHAR(256) COMMENT '索引耗时',
+ index_current 		INT(11) COMMENT '正在索引数量',
+ refresh_total 		VARCHAR(256) COMMENT '刷新内存总量',
+ refresh_total_time	VARCHAR(256) COMMENT '刷新内存耗时',
+ flush_total		VARCHAR(256) COMMENT '同步磁盘总量',
+ flush_total_time	VARCHAR(256) COMMENT '同步磁盘耗时' ,
+ query_cache_size 	VARCHAR(256) COMMENT '查询缓存大小' ,		
+ query_cache_evictions  VARCHAR(256) COMMENT '查询缓存剔除大小' ,
+ heap_used		VARCHAR(256) COMMENT '已使用堆大小',
+ heap_percent		VARCHAR(256) COMMENT '已使用堆占比',
+ heap_committed 	VARCHAR(256) COMMENT '承诺堆大小',
+ heap_max		VARCHAR(256) COMMENT '最大堆大小',
+ non_heap_used		VARCHAR(256) COMMENT '未堆使用大小',
+ non_heap_committed	VARCHAR(256) COMMENT '未堆承诺大小',
+ tsp_server_open	INT(11) COMMENT 'TCP连接数',
+ tsp_rx_count		INT(11) COMMENT '接收的数据包总数',
+ tsp_rx_size		VARCHAR(256) COMMENT '接收的数据的总大小',
+ tsp_tx_count		INT(11) COMMENT '发送的数据包总数',
+ tsp_tx_size		VARCHAR(256) COMMENT '发送的数据的总大小',
+ http_current_open	INT(11) COMMENT 'HTTP连接数',
+ http_total_opened	INT(11) COMMENT 'HTTP总连接数',
+ update_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+ )COMMENT 'ES 状态信息';
+ 
+ CREATE TABLE mq_status (
+  id 			INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '自增主键',
+  ip			VARCHAR(32) COMMENT 'IP地址',
+  NAME  		VARCHAR(256) COMMENT '名称',
+  TYPE 			VARCHAR(8) COMMENT '类型，队列或广播',
+  size			INT(11) COMMENT '剩余大小', 
+  consumer_count 	INT(11) COMMENT '消费者数量',
+  dequeue_count 	INT(11) COMMENT '出队数量',  
+  update_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+ )COMMENT 'MQ 状态信息';
+ ```
+  
