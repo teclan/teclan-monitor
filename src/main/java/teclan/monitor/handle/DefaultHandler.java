@@ -249,6 +249,12 @@ public class DefaultHandler implements Handler {
 						MysqlDatabase.getDb().exec(INSERT_MQ_STATUS_SQL, model.getIp(), model.getName(),
 								model.getType(), model.getQueueSize(), model.getConsumerCount(),
 								model.getDequeueCount());
+
+						if (model.getQueueSize() > thresholdQueueSize) {
+							DingTalkServer.send("系统状态监控", String.format("  来自机器 %s 的异常状态，%s(%s)未处理数据超过预设阈值%s，当前%s ",
+									mqIp, model.getName(), model.getType(), thresholdQueueSize, model.getQueueSize()));
+						}
+
 					}
 				} catch (Exception e) {
 					LOGGER.error(e.getMessage(), e);
