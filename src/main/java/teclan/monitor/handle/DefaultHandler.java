@@ -103,14 +103,14 @@ public class DefaultHandler implements Handler {
 
 			// 总的CPU使用率
 			JSONObject os = nodeData.getJSONObject("os");
-			final String cpuPercent = os.getLongValue("cpu_percent") + "%";
+			final String cpuPercent = dft.format(os.getLongValue("cpu_percent")) + "%";
 
 
 			// 机器内存使用情况
 			JSONObject osMem = os.getJSONObject("mem");
 			final String totalMem = dft.format(osMem.getLongValue("total_in_bytes") * 1.0 / divisor) + "G";
 			final String usedMem = dft.format(osMem.getLongValue("used_in_bytes") * 1.0 / divisor) + "G";
-			final String usedMemPercent = osMem.getLongValue("used_percent") 
+			final String usedMemPercent = dft.format(osMem.getLongValue("used_percent"))
 					+ "%";
 			final String freeMem = dft.format(osMem.getLongValue("free_in_bytes") * 1.0 / divisor) + "G";
 			final String freeMemPercent = dft.format(
