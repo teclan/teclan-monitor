@@ -1,5 +1,6 @@
 package teclan.monitor.handle;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -9,7 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSONObject;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
+import teclan.dingtalk.DingTalkServer;
 import teclan.monitor.model.MQModel;
 import teclan.monitor.mysql.MysqlDatabase;
 
@@ -30,6 +34,32 @@ public class DefaultHandler implements Handler {
 	private static final String INSEET_CPU_STATUS_SQL = "insert into cpu_status (cpu,percent) values (?,?)";
 
 	private static final String INSERT_MQ_STATUS_SQL = " INSERT INTO mq_status (ip,name,type,size,consumer_count,dequeue_count) VALUES (?,?,?,?,?,?)";
+
+	private static String mqIp;
+	private static String esIp;
+	private static Double thresholdCpu;
+	private static Double thresholdMemory;
+	private static int thresholdQueueSize;
+
+	static {
+
+		// 加载配置文件
+		File file = new File("config/application.conf");
+
+		Config root = ConfigFactory.parseFile(file);
+		Config config = root.getConfig("config");
+		Config mq = config.getConfig("mq");
+		Config es = config.getConfig("es");
+		Config threshold = config.getConfig("threshold");
+
+		mqIp = mq.getString("ip");
+		esIp = es.getString("ip");
+		thresholdCpu = Double.valueOf(threshold.getString("cpu").substring(0, threshold.getString("cpu").indexOf("%")));
+		thresholdMemory = Double
+				.valueOf(threshold.getString("memory").substring(0, threshold.getString("memory").indexOf("%")));
+		thresholdQueueSize = threshold.getInt("queueSize");
+	}
+
 
 	@Override
 	public void handle(JSONObject jsonObject) {
@@ -178,6 +208,21 @@ public class DefaultHandler implements Handler {
 							freeMemPercent, totalSwap, useSwap, usedSwapPercent, freeSwap, freeSwapPercent);
 
 					MysqlDatabase.getDb().exec(INSEET_CPU_STATUS_SQL, "所有", cpuPercent);
+
+						StringBuilder notice = new StringBuilder();
+
+						if (Double.valueOf(cpuPercent.substring(0, cpuPercent.indexOf("%"))) > thresholdCpu) {
+							notice.append(String.format("\nCPU使用率超过 %s ,当前：%s", thresholdCpu + "%", cpuPercent));
+						}
+						if (Double
+								.valueOf(usedMemPercent.substring(0, usedMemPercent.indexOf("%"))) > thresholdMemory) {
+							notice.append(String.format("\n内存使用率超过 %s ,当前：%s", thresholdMemory + "%", usedMemPercent));
+						}
+
+						if (notice != null) {
+							DingTalkServer.send("系统状态监控", String.format("  来自机器 %s 的异常状态", esIp) + notice.toString());
+						}
+
 					} catch (Exception e) {
 						LOGGER.error(e.getMessage(), e);
 					} finally {
@@ -210,7 +255,6 @@ public class DefaultHandler implements Handler {
 				} finally {
 					MysqlDatabase.closeDatabase();
 				}
-
 			}
 		});
 	}

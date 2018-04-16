@@ -11,5 +11,4 @@ public interface Handler {
 	void handle(JSONObject jsonObject);
 
 	void handle(List<MQModel> models);
-
 }
