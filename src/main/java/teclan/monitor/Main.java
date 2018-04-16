@@ -2,6 +2,7 @@ package teclan.monitor;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -48,6 +49,8 @@ public class Main {
 		final int connectorPort = mq.getInt("connectorPort");
 		final String connectorPath = mq.getString("connectorPath");
 		final String jmxDomainName = mq.getString("jmxDomainName");
+		final List<String> queues = mq.getStringList("queues");
+		final List<String> topics = mq.getStringList("topics");
 
 		// 任务配置
 		Config task = config.getConfig("task");
@@ -69,7 +72,7 @@ public class Main {
 
 				try {
 
-					MqMonitor.monitor(mqIp, connectorPort, connectorPath, jmxDomainName, handler);
+					MqMonitor.monitor(mqIp, connectorPort, connectorPath, jmxDomainName, queues, topics, handler);
 
 				} catch (MalformedObjectNameException | IOException e) {
 					LOGGER.error(e.getMessage(), e);

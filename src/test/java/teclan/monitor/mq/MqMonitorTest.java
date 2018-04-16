@@ -21,7 +21,7 @@ public class MqMonitorTest {
 
 			Handler handler = new DefaultHandler();
 
-			MqMonitor.monitor("localhost", 1099, "/jmxrmi", "org.apache.activemq", handler);
+			MqMonitor.monitor("localhost", 1099, "/jmxrmi", "org.apache.activemq", null, null, handler);
 
 
 		} catch (MalformedObjectNameException | IOException e) {

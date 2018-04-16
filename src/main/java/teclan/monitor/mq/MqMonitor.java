@@ -111,6 +111,7 @@ public class MqMonitor {
 	 * @throws MalformedObjectNameException
 	 */
 	public static void monitor(String ip, int connectorPort, String connectorPath, String jmxDomainName,
+			List<String> queues, List<String> topics,
 			Handler handler) throws IOException, MalformedObjectNameException {
 
 		List<MQModel> models = new ArrayList<MQModel>();
@@ -127,8 +128,14 @@ public class MqMonitor {
 				BrokerViewMBean.class, true);
 
 		for (ObjectName topicName : mBean.getTopics()) {
+
 			TopicViewMBean topice = (TopicViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection,
 					topicName, TopicViewMBean.class, true);
+
+			if (topics != null && !topics.contains(topice.getName())) {
+				LOGGER.debug("topic `{}` 不在监控列表中...", topice.getName());
+				continue;
+			}
 
 			TopicModel topicModel = new TopicModel(ip, topice.getName(), topice.getQueueSize(),
 					topice.getConsumerCount(),
@@ -141,6 +148,11 @@ public class MqMonitor {
 			QueueViewMBean queueMBean = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection,
 					queueName, QueueViewMBean.class, true);
 
+			if (queues != null && !queues.contains(queueMBean.getName())) {
+				LOGGER.debug("queue `{}` 不在监控列表中...", queueMBean.getName());
+				continue;
+			}
+
 			QueueModel queue = new QueueModel(ip, queueMBean.getName(), queueMBean.getQueueSize(),
 					queueMBean.getConsumerCount(), queueMBean.getDequeueCount());
 
@@ -149,9 +161,10 @@ public class MqMonitor {
 
 		connector.close();
 
-		LOGGER.info("{}", " ====  ActiveMQ");
+		LOGGER.info("{}", "ActiveMQ扫描完成");
 
 		handler.handle(models);
 
 	}
+	
 }
