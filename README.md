@@ -30,6 +30,37 @@ GET  _nodes/stats （或者指定node获取 _nodes/node1,node2/stats）
 		</managementContext>  
 ```
 
+特别注意
+
+```
+ # ActiveMQ 配置
+   mq {
+   
+   # 是否监控  MQ
+   enable=true
+   
+   ip="10.0.0.134"
+   
+   connectorPort=1099
+   
+   connectorPath="/jmxrmi"
+   
+   # 必须与activemq.xml中的jmxDomainName一致
+   jmxDomainName="org.apache.activemq"
+   
+   # 必须与activemq.xml中   broker 节点的 brokerName一致
+   brokerName="BROKER1" 
+   
+   # 需要监控的 queue
+   # queues=["LC_TEST","LC_TEST_FEEDBACK","fromSignalCollect"]
+   # 监听所以队列
+   queues=[]
+   
+   # 需要监控的 topic
+   topics=["ActiveMQ.Advisory.Consumer.Queue.LC_TEST_FEEDBACK"]
+   } 
+```
+
 # 内存和CPU
 
  内存和CPU目前均通过`elasticsearch`的状态查询接口获取。项目中已经集成 `sigar`,但还不够完善，后续需要查询每个

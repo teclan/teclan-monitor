@@ -50,22 +50,25 @@ public class MqMonitor {
 	 * @param connectorPath
 	 * @param jmxDomainName
 	 *            必须与activemq.xml中的jmxDomainName一致
+	 * @param brokerName
+	 *            必须与activemq.xml中 broker 节点的 brokerName一致
 	 * @throws IOException
 	 * @throws MalformedObjectNameException
 	 */
-	public static List<MQModel> monitor(String ip, int connectorPort, String connectorPath, String jmxDomainName)
+	public static List<MQModel> monitor(String ip, int connectorPort, String connectorPath, String jmxDomainName,
+			String brokerName)
 			throws IOException, MalformedObjectNameException {
 
 		List<MQModel> models = new ArrayList<MQModel>();
 
-			JMXServiceURL url = new JMXServiceURL(
+		JMXServiceURL url = new JMXServiceURL(
 				String.format("service:jmx:rmi:///jndi/rmi://%s:%s%s", ip, connectorPort, connectorPath));
-			JMXConnector connector = JMXConnectorFactory.connect(url, null);
-			connector.connect();
+		JMXConnector connector = JMXConnectorFactory.connect(url, null);
+		connector.connect();
 
 		MBeanServerConnection connection = connector.getMBeanServerConnection();
 
-		ObjectName name = new ObjectName(jmxDomainName + ":BrokerName=localhost,Type=Broker");
+		ObjectName name = new ObjectName(jmxDomainName + ":BrokerName=" + brokerName + ",Type=Broker");
 		BrokerViewMBean mBean = (BrokerViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection, name,
 				BrokerViewMBean.class, true);
 
@@ -74,8 +77,7 @@ public class MqMonitor {
 					topicName, TopicViewMBean.class, true);
 
 			TopicModel topicModel = new TopicModel(ip, topice.getName(), topice.getQueueSize(),
-					topice.getConsumerCount(),
-					topice.getDequeueCount());
+					topice.getConsumerCount(), topice.getDequeueCount());
 
 			models.add(topicModel);
 		}
@@ -105,14 +107,16 @@ public class MqMonitor {
 	 * @param connectorPath
 	 * @param jmxDomainName
 	 *            必须与activemq.xml中的jmxDomainName一致
+	 * @param brokerName
+	 *            必须与activemq.xml中 broker 节点的 brokerName一致
 	 * @param handler
 	 *            对结果的处理
 	 * @throws IOException
 	 * @throws MalformedObjectNameException
 	 */
 	public static void monitor(String ip, int connectorPort, String connectorPath, String jmxDomainName,
-			List<String> queues, List<String> topics,
-			Handler handler) throws IOException, MalformedObjectNameException {
+			String brokerName, List<String> queues, List<String> topics, Handler handler)
+			throws IOException, MalformedObjectNameException {
 
 		List<MQModel> models = new ArrayList<MQModel>();
 
@@ -123,7 +127,8 @@ public class MqMonitor {
 
 		MBeanServerConnection connection = connector.getMBeanServerConnection();
 
-		ObjectName name = new ObjectName(jmxDomainName + ":BrokerName=localhost,Type=Broker");
+		ObjectName name = new ObjectName(jmxDomainName + ":brokerName=" + brokerName + ",type=Broker");
+
 		BrokerViewMBean mBean = (BrokerViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection, name,
 				BrokerViewMBean.class, true);
 
@@ -132,14 +137,13 @@ public class MqMonitor {
 			TopicViewMBean topice = (TopicViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection,
 					topicName, TopicViewMBean.class, true);
 
-			if (topics != null && !topics.contains(topice.getName())) {
+			if (!topics.isEmpty() && !topics.contains(topice.getName())) {
 				LOGGER.debug("topic `{}` 不在监控列表中...", topice.getName());
 				continue;
 			}
 
 			TopicModel topicModel = new TopicModel(ip, topice.getName(), topice.getQueueSize(),
-					topice.getConsumerCount(),
-					topice.getDequeueCount());
+					topice.getConsumerCount(), topice.getDequeueCount());
 
 			models.add(topicModel);
 		}
@@ -148,7 +152,7 @@ public class MqMonitor {
 			QueueViewMBean queueMBean = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection,
 					queueName, QueueViewMBean.class, true);
 
-			if (queues != null && !queues.contains(queueMBean.getName())) {
+			if (!queues.isEmpty() && !queues.contains(queueMBean.getName())) {
 				LOGGER.debug("queue `{}` 不在监控列表中...", queueMBean.getName());
 				continue;
 			}
@@ -166,5 +170,5 @@ public class MqMonitor {
 		handler.handle(models);
 
 	}
-	
+
 }

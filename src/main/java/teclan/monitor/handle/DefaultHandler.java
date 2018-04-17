@@ -219,7 +219,7 @@ public class DefaultHandler implements Handler {
 							notice.append(String.format("\n内存使用率超过 %s ,当前：%s", thresholdMemory + "%", usedMemPercent));
 						}
 
-						if (notice != null) {
+						if (notice.length() > 0) {
 							DingTalkServer.send("系统状态监控", String.format("  来自机器 %s 的异常状态", esIp) + notice.toString());
 						}
 

@@ -51,6 +51,7 @@ public class Main {
 		final int connectorPort = mq.getInt("connectorPort");
 		final String connectorPath = mq.getString("connectorPath");
 		final String jmxDomainName = mq.getString("jmxDomainName");
+		final String brokerName = mq.getString("brokerName");
 		final List<String> queues = mq.getStringList("queues");
 		final List<String> topics = mq.getStringList("topics");
 
@@ -81,7 +82,8 @@ public class Main {
 				try {
 
 					if (mqEnable) {
-						MqMonitor.monitor(mqIp, connectorPort, connectorPath, jmxDomainName, queues, topics, handler);
+						MqMonitor.monitor(mqIp, connectorPort, connectorPath, jmxDomainName, brokerName, queues, topics,
+								handler);
 					}
 
 				} catch (Exception e) {
