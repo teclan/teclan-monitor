@@ -280,10 +280,13 @@ public class SigarUtils {
 
 		System.out.println("+++++++++ " + getInstance().getNetInterfaceConfig().getAddress());
 
-		// for (int i = 0; i < nIfNames.length; i++) {
-		for (int i = 0; i < 0; i++) {
+		for (int i = 0; i < nIfNames.length; i++) {
 			String name = nIfNames[i];
 			NetInterfaceConfig nIfConfig = getInstance().getNetInterfaceConfig(name);
+
+			if (!"10.0.0.134".equals(nIfConfig.getAddress())) {
+				continue;
+			}
 
 			netInfoList.add(new SigarInfoEntity(name, "网络设备名" + i));
 			netInfoList.add(new SigarInfoEntity(nIfConfig.getAddress(), "IP地址" + i));

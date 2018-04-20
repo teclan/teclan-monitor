@@ -18,6 +18,7 @@ import teclan.monitor.es.ElasticsearchMonitor;
 import teclan.monitor.handle.DefaultHandler;
 import teclan.monitor.handle.Handler;
 import teclan.monitor.mq.MqMonitor;
+import teclan.monitor.system.SystemMonitor;
 
 public class Main {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
@@ -54,6 +55,10 @@ public class Main {
 		final String brokerName = mq.getString("brokerName");
 		final List<String> queues = mq.getStringList("queues");
 		final List<String> topics = mq.getStringList("topics");
+
+		Config system = config.getConfig("system");
+		final List<String> fileSystems = system.getStringList("fileSystems");
+		final String network = system.getString("network");
 
 		// 任务配置
 		Config task = config.getConfig("task");
@@ -94,6 +99,9 @@ public class Main {
 						LOGGER.error(e.getMessage(), e);
 					}
 				}
+
+				SystemMonitor.monitor(fileSystems, network, handler);
+
 			}
 		}, 0, flushRate, TimeUnit.SECONDS);
 	}

@@ -35,9 +35,9 @@ public class SigarMain {
             se.printStackTrace();  
 		}
 
-		List<ProcessInfo> list = SigarUtils.getProcessInfo();
+		List<SigarInfoEntity> list = SigarUtils.getNetInfos();
 
-		for (ProcessInfo info : list) {
+		for (SigarInfoEntity info : list) {
 			System.out.println(info.toString());
 		}
   

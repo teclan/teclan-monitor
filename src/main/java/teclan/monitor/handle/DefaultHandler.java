@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.hyperic.sigar.CpuPerc;
+import org.hyperic.sigar.Mem;
+import org.hyperic.sigar.Swap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +19,8 @@ import com.typesafe.config.ConfigFactory;
 import teclan.dingtalk.DingTalkServer;
 import teclan.monitor.model.MQModel;
 import teclan.monitor.mysql.MysqlDatabase;
+import teclan.sigar.modle.DiskLoad;
+import teclan.sigar.modle.NetTraffic;
 
 public class DefaultHandler implements Handler {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultHandler.class);
@@ -35,11 +40,15 @@ public class DefaultHandler implements Handler {
 
 	private static final String INSERT_MQ_STATUS_SQL = " INSERT INTO mq_status (ip,name,type,size,consumer_count,dequeue_count) VALUES (?,?,?,?,?,?)";
 
-	private static String mqIp;
-	private static String esIp;
+	private static final String INSERT_NETWORK_STATUS_SQL = " INSERT INTO network_status (ip,speed,packets,rx_speed,rx_packets,tx_speed,tx_packets) VALUES (?,?,?,?,?,?,?)";
+
+	private static final String INSERT_DISK_STATUS_SQL = " INSERT INTO disk_status (`file_system`,`read_speed`,`write_speed`,`reads`,`writes`,`queue`) VALUES ( ?,?,?,?,?,?)";
+
 	private static Double thresholdCpu;
 	private static Double thresholdMemory;
 	private static int thresholdQueueSize;
+
+	private static DecimalFormat dft = new DecimalFormat("0.00");
 
 	static {
 
@@ -48,12 +57,8 @@ public class DefaultHandler implements Handler {
 
 		Config root = ConfigFactory.parseFile(file);
 		Config config = root.getConfig("config");
-		Config mq = config.getConfig("mq");
-		Config es = config.getConfig("es");
 		Config threshold = config.getConfig("threshold");
 
-		mqIp = mq.getString("ip");
-		esIp = es.getString("ip");
 		thresholdCpu = Double.valueOf(threshold.getString("cpu").substring(0, threshold.getString("cpu").indexOf("%")));
 		thresholdMemory = Double
 				.valueOf(threshold.getString("memory").substring(0, threshold.getString("memory").indexOf("%")));
@@ -64,10 +69,10 @@ public class DefaultHandler implements Handler {
 	@Override
 	public void handle(JSONObject jsonObject) {
 
-		DecimalFormat dft = new DecimalFormat("0.00");
+
 		long divisor = 1024 * 1024 * 1024L;
 
-		String clusterName = jsonObject.getString("cluster_name");
+		// String clusterName = jsonObject.getString("cluster_name");
 		JSONObject nodes = jsonObject.getJSONObject("nodes");
 
 		for (String nodeName : nodes.keySet()) {
@@ -131,33 +136,41 @@ public class DefaultHandler implements Handler {
 			// 查询缓存剔除大小
 			final String queryCacheEvictions = dft.format(queryCache.getLongValue("evictions") * 1024.0 / divisor) + "M";
 
-			// 总的CPU使用率
-			JSONObject os = nodeData.getJSONObject("os");
-			final String cpuPercent = dft.format(os.getLongValue("cpu_percent")) + "%";
+			// // 总的CPU使用率
+			// JSONObject os = nodeData.getJSONObject("os");
+			// final String cpuPercent = dft.format(os.getLongValue("cpu_percent")) + "%";
 
+			// // 机器内存使用情况
+			// JSONObject osMem = os.getJSONObject("mem");
+			// final String totalMem = dft.format(osMem.getLongValue("total_in_bytes") * 1.0
+			// / divisor) + "G";
+			// final String usedMem = dft.format(osMem.getLongValue("used_in_bytes") * 1.0 /
+			// divisor) + "G";
+			// final String usedMemPercent = dft.format(osMem.getLongValue("used_percent"))
+			// + "%";
+			// final String freeMem = dft.format(osMem.getLongValue("free_in_bytes") * 1.0 /
+			// divisor) + "G";
+			// final String freeMemPercent = dft.format(
+			// osMem.getLongValue("free_in_bytes") * 100.0 /
+			// osMem.getLongValue("total_in_bytes"))
+			// + "%";
 
-			// 机器内存使用情况
-			JSONObject osMem = os.getJSONObject("mem");
-			final String totalMem = dft.format(osMem.getLongValue("total_in_bytes") * 1.0 / divisor) + "G";
-			final String usedMem = dft.format(osMem.getLongValue("used_in_bytes") * 1.0 / divisor) + "G";
-			final String usedMemPercent = dft.format(osMem.getLongValue("used_percent"))
-					+ "%";
-			final String freeMem = dft.format(osMem.getLongValue("free_in_bytes") * 1.0 / divisor) + "G";
-			final String freeMemPercent = dft.format(
-					osMem.getLongValue("free_in_bytes") * 100.0 / osMem.getLongValue("total_in_bytes"))
-					+ "%";
-
-			// 机器交换空间使用情况
-			JSONObject swap = os.getJSONObject("swap");
-			final String totalSwap = dft.format(swap.getLongValue("total_in_bytes") * 1.0 / divisor) + "G";
-			final String freeSwap = dft.format(swap.getLongValue("free_in_bytes") * 1.0 / divisor) + "G";
-			final String useSwap = dft.format(swap.getLongValue("used_in_bytes") * 1.0 / divisor) + "G";
-			final String freeSwapPercent = dft.format(
-					swap.getLongValue("free_in_bytes") * 100.0 / swap.getLongValue("total_in_bytes"))
-					+ "%";
-			final String usedSwapPercent = dft.format(
-					swap.getLongValue("used_in_bytes") * 100.0 / swap.getLongValue("total_in_bytes"))
-					+ "%";
+			// // 机器交换空间使用情况
+			// JSONObject swap = os.getJSONObject("swap");
+			// final String totalSwap = dft.format(swap.getLongValue("total_in_bytes") * 1.0
+			// / divisor) + "G";
+			// final String freeSwap = dft.format(swap.getLongValue("free_in_bytes") * 1.0 /
+			// divisor) + "G";
+			// final String useSwap = dft.format(swap.getLongValue("used_in_bytes") * 1.0 /
+			// divisor) + "G";
+			// final String freeSwapPercent = dft.format(
+			// swap.getLongValue("free_in_bytes") * 100.0 /
+			// swap.getLongValue("total_in_bytes"))
+			// + "%";
+			// final String usedSwapPercent = dft.format(
+			// swap.getLongValue("used_in_bytes") * 100.0 /
+			// swap.getLongValue("total_in_bytes"))
+			// + "%";
 
 
 			JSONObject jvm = nodeData.getJSONObject("jvm");
@@ -204,24 +217,6 @@ public class DefaultHandler implements Handler {
 							flushTotal, flushTotalTime, queryCacheSize, queryCacheEvictions, heapUsed, heapUsedPercent,
 							heapCommitted, heapMax, nonHeapUsed, nonHeapCommitted, transportServerOpen, rxCount, rxSize,
 							txCount, txSize, httpCurrentOpen, httpTotalOpened);
-					MysqlDatabase.getDb().exec(INSERT_MEMORY_STATUS_SQL, totalMem, usedMem, usedMemPercent, freeMem,
-							freeMemPercent, totalSwap, useSwap, usedSwapPercent, freeSwap, freeSwapPercent);
-
-					MysqlDatabase.getDb().exec(INSEET_CPU_STATUS_SQL, "所有", cpuPercent);
-
-						StringBuilder notice = new StringBuilder();
-
-						if (Double.valueOf(cpuPercent.substring(0, cpuPercent.indexOf("%"))) > thresholdCpu) {
-							notice.append(String.format("\nCPU使用率超过 %s ,当前：%s", thresholdCpu + "%", cpuPercent));
-						}
-						if (Double
-								.valueOf(usedMemPercent.substring(0, usedMemPercent.indexOf("%"))) > thresholdMemory) {
-							notice.append(String.format("\n内存使用率超过 %s ,当前：%s", thresholdMemory + "%", usedMemPercent));
-						}
-
-						if (notice.length() > 0) {
-							DingTalkServer.send("系统状态监控", String.format("  来自机器 %s 的异常状态", esIp) + notice.toString());
-						}
 
 					} catch (Exception e) {
 						LOGGER.error(e.getMessage(), e);
@@ -252,7 +247,8 @@ public class DefaultHandler implements Handler {
 
 						if (model.getQueueSize() > thresholdQueueSize) {
 							DingTalkServer.send("系统状态监控", String.format("  来自机器 %s 的异常状态，%s(%s)未处理数据超过预设阈值%s，当前%s ",
-									mqIp, model.getName(), model.getType(), thresholdQueueSize, model.getQueueSize()));
+									model.getIp(), model.getName(), model.getType(), thresholdQueueSize,
+									model.getQueueSize()));
 						}
 
 					}
@@ -264,4 +260,92 @@ public class DefaultHandler implements Handler {
 			}
 		});
 	}
+
+	@Override
+	public void handle(final Mem mem, final Swap swap, final CpuPerc cpuPerc, final List<DiskLoad> diskLoads,
+			final NetTraffic netTraffic) {
+		
+		final long divisor = 1024 * 1024 * 1024L;
+
+		EXECUTORS.execute(new Runnable() {
+			public void run() {
+				
+				try {
+				MysqlDatabase.openDatabase();
+				
+					MysqlDatabase.getDb().exec(INSERT_MEMORY_STATUS_SQL,
+							dft.format(mem.getTotal() * 1.0 / divisor) + "G",
+							dft.format(mem.getUsed() * 1.0 / divisor) + "G", dft.format(mem.getUsedPercent()) + "%",
+							dft.format(mem.getFree() * 1.0 / divisor) + "G", dft.format(mem.getFreePercent()) + "%",
+							dft.format(swap.getTotal() * 1.0 / divisor) + "G",
+							dft.format(swap.getUsed() * 1.0 / divisor) + "G",
+							dft.format(swap.getUsed() * 100.0 / swap.getTotal()) + "%",
+							dft.format(swap.getFree() * 1.0 / divisor) + "G",
+							dft.format(swap.getFree() * 100.0 / swap.getTotal()) + "%");
+
+					MysqlDatabase.getDb().exec(INSEET_CPU_STATUS_SQL, "所有",
+							dft.format(cpuPerc.getCombined() * 100) + "%");
+
+					MysqlDatabase.getDb().exec(INSERT_NETWORK_STATUS_SQL, netTraffic.getIp(),
+							dft.format(netTraffic.getSpeedInBytes() * 1.0 / 1024 / 1024) + "Mbps",
+							netTraffic.getSpeedInPackets(),
+							dft.format(netTraffic.getRxSpeedInBytes() * 1.0 / 1024 / 1024) + "Mbps",
+							netTraffic.getRxSpeesInPackets(),
+							dft.format(netTraffic.getTxSpeedInBytes() * 1.0 / 1024 / 1024) + "Mbps",
+							netTraffic.getTxSpeesInPackets());
+
+					for (DiskLoad diskLoad : diskLoads) {
+						
+						MysqlDatabase.getDb().exec(INSERT_DISK_STATUS_SQL,
+								diskLoad.getFileSystem(),
+								dft.format(diskLoad.getReadInBytes() * 1.0 / 1024) + "Kbps",
+								dft.format(diskLoad.getWriteInBytes() * 1.0 / 1024) + "Kbps", diskLoad.getDiskReads(),
+								diskLoad.getDiskWrites(), diskLoad.getDiskQueue());
+					}
+
+					StringBuilder notice = new StringBuilder();
+
+					if (cpuPerc.getCombined() > thresholdCpu) {
+						notice.append(
+								String.format("  \nCPU使用率超过 %s ,当前：%s", thresholdCpu + "%",
+										cpuPerc.getCombined() + "%"));
+					}
+					if (mem.getUsedPercent() > thresholdMemory) {
+						notice.append(String.format("  \n内存使用率超过 %s ,当前：%s", thresholdMemory + "%",
+								dft.format(mem.getUsedPercent()) + "%"));
+					}
+
+
+					if (notice.length() > 0) {
+						notice.append(String.format("  \n网络接收速率 ：%s ,网络发送速率：%s，总速率：%s",
+								dft.format(netTraffic.getRxSpeedInBytes() * 1.0 / 1024 / 1024) + "Mbps",
+								dft.format(netTraffic.getTxSpeedInBytes() * 1.0 / 1024 / 1024) + "Mbps",
+								dft.format(netTraffic.getSpeedInBytes() * 1.0 / 1024 / 1024) + "Mbps"));
+
+						for (DiskLoad diskLoad : diskLoads) {
+							notice.append(String.format("  \n%s", getDiskLoadAlarm(diskLoad)));
+						}
+
+
+						DingTalkServer.send("系统状态监控",
+								String.format("  来自机器 %s 的异常状态", netTraffic.getIp()) + notice.toString());
+					}
+
+
+				} catch (Exception e) {
+					LOGGER.error(e.getMessage(), e);
+				} finally {
+					MysqlDatabase.closeDatabase();
+				}
+			}
+		});
+	}
+
+	private String getDiskLoadAlarm(DiskLoad diskLoad) {
+		
+		return String.format("文件系统:%s，读取速率:%s，写速率:%s，文件队列:%s", diskLoad.getFileSystem(),
+				dft.format(diskLoad.getReadInBytes() * 1.0 / 1024) + "Kbps",
+				dft.format(diskLoad.getWriteInBytes() * 1.0 / 1024) + "Kbps", diskLoad.getDiskQueue());
+	}
+
 }
