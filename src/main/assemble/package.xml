@@ -36,6 +36,13 @@
 			</includes>
 			<outputDirectory>lib</outputDirectory>
 		</fileSet>
+		<fileSet>
+			<directory>./sigar-lib</directory>
+			<includes>
+				<include>*.dll</include>
+			</includes>
+			<outputDirectory>siagr-lib</outputDirectory>
+		</fileSet>
 	</fileSets>
 	<dependencySets>
 		<dependencySet>

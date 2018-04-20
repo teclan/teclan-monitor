@@ -1,7 +1,31 @@
+# 项目
 
-# elasticsearch 状态查询
+系统状态监控，支持监控 elasticsearch,ActiveMQ,内存，CPU，网络，文件系统等
 
-## 查看整个集群当前的运行状态API接口：
+## 依赖
+
+`teclan-dingtalk`  
+`teclan-sigar`
+
+## 打包
+
+在项目根目录下执行
+```
+mvn package -Dmaven.test.skip=true
+``` 
+生成的  zip 包就是可执行的程序以及依赖
+
+## 运行
+
+解压打包生成的 .zip 文件，安装注释修改 `config/`目录下的配置文件，双击 `startup.bat`
+即可，win64 需要将 `sigar-lib/`目录下的 `sigar-amd64-winnt.dll` 复制到 `C:\Windows\System32`
+下，win32 需要将 `sigar-lib/`目录下的 `sigar-x86-winnt.dll` 复制到 `C:\Windows\System32`，
+否则程序无法调用sigar获取系统状态信息。
+
+
+## elasticsearch 状态查询
+
+### 查看整个集群当前的运行状态API接口：
 ```
 GET _cluster/stats 
 ```
@@ -14,7 +38,7 @@ GET  _nodes/stats （或者指定node获取 _nodes/node1,node2/stats）
 
 详情参见 `elasticsearch性能指标的部分解释.md`
 
-# ActiveMQ 状态查询 
+## ActiveMQ 状态查询 
  
  监控 activemq 各个`queue`和`topic`的状态，包括剩余数据量，消费者数量，出队数量，
  
@@ -61,13 +85,12 @@ GET  _nodes/stats （或者指定node获取 _nodes/node1,node2/stats）
    } 
 ```
 
-# 内存和CPU
+## 内存、交换空间、CPU、文件系统IO、网络速率
 
- 内存和CPU目前均通过`elasticsearch`的状态查询接口获取。项目中已经集成 `sigar`,但还不够完善，后续需要查询每个
+均通过 `sigar` 获取 
+
  
- 进程的资源消耗情况，则换成`sigar`。
- 
- # 数据库
+## 数据库
  
  本程序涉及到的数据库相关的脚步如下:
  
@@ -143,5 +166,29 @@ GET  _nodes/stats （或者指定node获取 _nodes/node1,node2/stats）
   dequeue_count 	INT(11) COMMENT '出队数量',  
   update_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
  )COMMENT 'MQ 状态信息';
+ 
+ 
+  CREATE TABLE network_status (
+  id 			INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '自增主键',
+  ip			VARCHAR(32) COMMENT 'IP地址',
+  speed			VARCHAR(256) COMMENT '总速率',
+  packets		VARCHAR(256) COMMENT '总包裹',
+  rx_speed  		VARCHAR(256) COMMENT '接收速率',
+  rx_packets		VARCHAR(256) COMMENT '接收包裹',
+  tx_speed  		VARCHAR(256) COMMENT '发送速率',
+  tx_packets		VARCHAR(256) COMMENT '发送包裹', 
+  update_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+ )COMMENT '网络状态信息';
+ 
+  CREATE TABLE disk_status (
+  `id`			INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '自增主键',
+  `file_system`		VARCHAR(256) COMMENT '文件系统',
+  `read_speed`		VARCHAR(256) COMMENT '读取速率',
+  `write_speed`		VARCHAR(256) COMMENT '写速率',
+  `reads`		VARCHAR(256) COMMENT '读物次数',
+  `writes`		VARCHAR(256) COMMENT '写次数',
+  `queue`  		VARCHAR(256) COMMENT '磁盘队列',
+  `update_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+ )COMMENT '磁盘状态信息';
  ```
   
