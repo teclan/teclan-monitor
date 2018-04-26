@@ -21,6 +21,7 @@ import teclan.monitor.model.MQModel;
 import teclan.monitor.mysql.MysqlDatabase;
 import teclan.sigar.modle.DiskLoad;
 import teclan.sigar.modle.NetTraffic;
+import teclan.sigar.modle.ProcessInfo;
 
 public class DefaultHandler implements Handler {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultHandler.class);
@@ -43,6 +44,8 @@ public class DefaultHandler implements Handler {
 	private static final String INSERT_NETWORK_STATUS_SQL = " INSERT INTO network_status (ip,speed,packets,rx_speed,rx_packets,tx_speed,tx_packets) VALUES (?,?,?,?,?,?,?)";
 
 	private static final String INSERT_DISK_STATUS_SQL = " INSERT INTO disk_status (`file_system`,`read_speed`,`write_speed`,`reads`,`writes`,`queue`) VALUES ( ?,?,?,?,?,?)";
+
+	private static final String INSERT_PROCESS_STATUS_SQL = " INSERT INTO process_status (`pid`,`name`,`user`,`memUse`) VALUES (?,?,?,?)";
 
 	private static Double thresholdCpu;
 	private static Double thresholdMemory;
@@ -263,7 +266,7 @@ public class DefaultHandler implements Handler {
 
 	@Override
 	public void handle(final Mem mem, final Swap swap, final CpuPerc cpuPerc, final List<DiskLoad> diskLoads,
-			final NetTraffic netTraffic) {
+			final NetTraffic netTraffic, final List<ProcessInfo> processInfos) {
 		
 		final long divisor = 1024 * 1024 * 1024L;
 
@@ -303,6 +306,12 @@ public class DefaultHandler implements Handler {
 								diskLoad.getDiskWrites(), diskLoad.getDiskQueue());
 					}
 
+					for (ProcessInfo processInfo : processInfos) {
+						MysqlDatabase.getDb().exec(INSERT_PROCESS_STATUS_SQL, processInfo.getPid(),
+								processInfo.getName(), processInfo.getUser(), processInfo.getMemUse());
+
+					}
+
 					StringBuilder notice = new StringBuilder();
 
 					if (cpuPerc.getCombined() > thresholdCpu) {
@@ -315,7 +324,6 @@ public class DefaultHandler implements Handler {
 								dft.format(mem.getUsedPercent()) + "%"));
 					}
 
-
 					if (notice.length() > 0) {
 						notice.append(String.format("  \n网络接收速率 ：%s ,网络发送速率：%s，总速率：%s",
 								dft.format(netTraffic.getRxSpeedInBytes() * 1.0 / 1024 / 1024) + "Mbps",
@@ -326,6 +334,9 @@ public class DefaultHandler implements Handler {
 							notice.append(String.format("  \n%s", getDiskLoadAlarm(diskLoad)));
 						}
 
+						for (ProcessInfo processInfo : processInfos) {
+							notice.append(String.format("  \n%s", getProcessAlarm(processInfo)));
+						}
 
 						DingTalkServer.send("系统状态监控",
 								String.format("  来自机器 %s 的异常状态", netTraffic.getIp()) + notice.toString());
@@ -346,6 +357,15 @@ public class DefaultHandler implements Handler {
 		return String.format("文件系统:%s，读取速率:%s，写速率:%s，文件队列:%s", diskLoad.getFileSystem(),
 				dft.format(diskLoad.getReadInBytes() * 1.0 / 1024) + "Kbps",
 				dft.format(diskLoad.getWriteInBytes() * 1.0 / 1024) + "Kbps", diskLoad.getDiskQueue());
+	}
+
+	private String getProcessAlarm(ProcessInfo processInfo) {
+
+		return String.format(
+				"进程号:%s，进程名:%s，占用内存:%s", processInfo.getPid(), processInfo.getName()
+						.substring(processInfo.getName().lastIndexOf("\\") + 1, processInfo.getName().length()),
+				processInfo.getMemUse());
+
 	}
 
 }

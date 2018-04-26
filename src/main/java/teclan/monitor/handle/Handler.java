@@ -11,6 +11,7 @@ import com.alibaba.fastjson.JSONObject;
 import teclan.monitor.model.MQModel;
 import teclan.sigar.modle.DiskLoad;
 import teclan.sigar.modle.NetTraffic;
+import teclan.sigar.modle.ProcessInfo;
 
 public interface Handler {
 
@@ -18,5 +19,6 @@ public interface Handler {
 
 	void handle(List<MQModel> models);
 
-	void handle(Mem men, Swap swap, CpuPerc cpuPerc, List<DiskLoad> diskLoads, NetTraffic netTraffic);
+	void handle(Mem men, Swap swap, CpuPerc cpuPerc, List<DiskLoad> diskLoads, NetTraffic netTraffic,
+			List<ProcessInfo> processInfos);
 }

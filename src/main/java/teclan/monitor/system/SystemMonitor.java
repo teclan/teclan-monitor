@@ -13,6 +13,7 @@ import teclan.monitor.handle.Handler;
 import teclan.sigar.SigarUtils;
 import teclan.sigar.modle.DiskLoad;
 import teclan.sigar.modle.NetTraffic;
+import teclan.sigar.modle.ProcessInfo;
 
 public class SystemMonitor {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SystemMonitor.class);
@@ -25,9 +26,12 @@ public class SystemMonitor {
 	 * @param fileSystems
 	 *            慎重设值，每个文件系统需要耗时 1s
 	 * @param localAddress
+	 * 
+	 * @@param process 监控的进程名列表
+	 * 
 	 * @param handler
 	 */
-	public static void monitor(List<String> fileSystems, String localAddress, Handler handler) {
+	public static void monitor(List<String> fileSystems, String localAddress, List<String> processNames, Handler handler) {
 
 		Mem men = SigarUtils.getMem();
 
@@ -49,7 +53,9 @@ public class SystemMonitor {
 
 		NetTraffic netTraffic = SigarUtils.getNetTraffic(localAddress);
 
-		handler.handle(men, swap, cpuPerc, diskLoads, netTraffic);
+		List<ProcessInfo> processInfos = SigarUtils.getProcessInfo(processNames);
+
+		handler.handle(men, swap, cpuPerc, diskLoads, netTraffic, processInfos);
 
 	}
 
