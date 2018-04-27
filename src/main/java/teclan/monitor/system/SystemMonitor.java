@@ -31,7 +31,8 @@ public class SystemMonitor {
 	 * 
 	 * @param handler
 	 */
-	public static void monitor(List<String> fileSystems, String localAddress, List<String> processNames, Handler handler) {
+	public static void monitor(List<String> fileSystems, String localAddress, List<String> processNames,
+			boolean processEnable, Handler handler) {
 
 		Mem men = SigarUtils.getMem();
 
@@ -50,14 +51,17 @@ public class SystemMonitor {
 			}
 		}
 
-
 		NetTraffic netTraffic = SigarUtils.getNetTraffic(localAddress);
 
-		List<ProcessInfo> processInfos = SigarUtils.getProcessInfo(processNames);
+		List<ProcessInfo> processInfos = new ArrayList<ProcessInfo>();
+		if (processEnable) {
+
+			processInfos = SigarUtils.getProcessInfo(processNames);
+
+		}
 
 		handler.handle(men, swap, cpuPerc, diskLoads, netTraffic, processInfos);
 
 	}
-
 
 }

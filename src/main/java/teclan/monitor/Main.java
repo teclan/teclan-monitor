@@ -59,7 +59,10 @@ public class Main {
 		Config system = config.getConfig("system");
 		final List<String> fileSystems = system.getStringList("fileSystems");
 		final String network = system.getString("network");
-		final List<String> processNames = system.getStringList("processNames");
+
+		Config process = system.getConfig("process");
+		final boolean processEnable = process.getBoolean("enable");
+		final List<String> processNames = process.getStringList("processNames");
 
 		// 任务配置
 		Config task = config.getConfig("task");
@@ -101,7 +104,7 @@ public class Main {
 					}
 				}
 
-				SystemMonitor.monitor(fileSystems, network, processNames, handler);
+				SystemMonitor.monitor(fileSystems, network, processNames, processEnable, handler);
 
 			}
 		}, 0, flushRate, TimeUnit.SECONDS);

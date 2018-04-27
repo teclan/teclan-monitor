@@ -9,16 +9,26 @@ import teclan.sigar.modle.ProcessInfo;
 public class SystemTest {
 
 	public static void main(String[] args) {
-		
-		List<String> process = new ArrayList<String>();
-		
-		process.add("firefox.exe");
-		
-		List<ProcessInfo> list = SigarUtils.getProcessInfo(process);
 
-		for (ProcessInfo processInfo : list) {
-			System.out.println(processInfo);
-		}
+		List<String> process = new ArrayList<String>();
+
+		process.add("123.exe");
+
+		ProcessInfo list = SigarUtils.getProcessInfo(100, process);
+
+		System.out.println(list.toString());
+
+
+		// for (ProcessInfo processInfo : list) {
+		// System.out.println(processInfo);
+		// }
+		//
+		// try {
+		// Ps.getInfo(SigarUtils.getInstance(), 100);
+		// } catch (SigarException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 
 
 	}
